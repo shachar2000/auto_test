@@ -82,7 +82,7 @@ jobs:
         ls
         sudo find / -name "dockerio_library_registry2.tar.gz"
         
-        sudo docker load -i my_project/dockerio_library_registry2.tar.gz
+        sudo docker load -i /home/runner/work/auto_test/auto_test/dockerio_library_registry2.tar.gz
         
         sudo docker tag <imageidtag> docker.io/library/registry:2
         
