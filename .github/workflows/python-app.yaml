@@ -62,9 +62,11 @@ jobs:
         DNS.1 = registry
         DNS.2 = registry.example.com                        
         EOF
-        
+
+        sudo touch domain.crt
         sudo touch domain.key
         sudo chmod 777 domain.key
+        sudo chmod 777 domain.crt
         sudo apt-get update
         sudo apt-get install openssl
         
