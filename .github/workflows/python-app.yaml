@@ -26,20 +26,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Set up OpenSSL and Docker
+    - name: Install cluster
       run: |
-        sudo apt-get update
-        sudo apt-get install containerd.io
-        sudo apt-get install -y openssl docker.io apache2-utils
-
-    - name: Create directories
-      run: |
-        sudo mkdir -p /var/registry
-        sudo mkdir /var/registry/{certs,data,auth}
-
-    - name: Create CSR configuration file
-      run: |
-        sudo bash -c 'cat > /var/registry/csr_answer.txt << EOF
+        mkdir -p /var/registry
+        cd /var/registry
+        mkdir /var/registry/{certs,data,auth}
+        cat > csr_answer.txt << EOF
         [req]
         default_bits = 4096
         prompt = no
@@ -66,35 +58,22 @@ jobs:
         
         [ alt_names ]
         DNS.1 = registry
-        DNS.2 = registry.example.com
-        EOF'
-
-    - name: Generate SSL certificates
-      run: |
-        sudo openssl req -newkey rsa:4096 -nodes -sha256 -keyout /var/registry/certs/domain.key -x509 -days 3650 -out /var/registry/certs/domain.crt -config /var/registry/csr_answer.txt
-
-    - name: Create htpasswd file
-      run: |
-        sudo htpasswd -bBc /var/registry/auth/htpasswd root ort
-
-    - name: Run Docker Registry container
-      run: |
-        sudo docker run -d --name registry -p 5000:5000 \
-          -v /var/registry/data:/var/lib/registry \
-          -v /var/registry/auth:/auth \
-          -v /var/registry/certs:/certs \
-          -e "REGISTRY_AUTH=htpasswd" \
-          -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" \
-          -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
-          -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
-          -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
-          registry:2
-
-    - name: Verify Registry setup
-      run: |
-        curl -u root:ort -k https://localhost:5000/v2/_catalog
-
+        DNS.2 = registry.example.com                        
+        EOF
+        
+        openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 3650 -out domain.crt -config <(cat csr_answer.txt)
+        
+        htpasswd -bBc /var/registry/auth/htpasswd root ort
+        
+        install -y jq openssl docker httpd-tools curl wget telnet nmap bind-utils iperf3 net-tools ftp tftp bash-completion runc
+        
+        docker load -i dockerio_library_registry2.tar.gz
+        
+        docker tag <imageidtag> docker.io/library/registry:2
+        
+        docker run --name registry -p 5000:5000 -v /var/registry/data:/var/lib/registry:z -v /var/registry/auth:/auth:z -v /var/registry/certs:/certs:z -e "REGISTRY_AUTH=htpasswd" -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key -d docker.io/library/registry:2
+        
+        curl -u root:octopus -k https://registry:5000/v2/_catalog
     - name: Run tests
       run: |
         pytest
-
