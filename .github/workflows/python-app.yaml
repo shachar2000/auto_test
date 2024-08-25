@@ -78,7 +78,8 @@ jobs:
         
         sudo apt-get install -y jq openssl docker.io apache2-utils curl wget telnet nmap dnsutils iperf3 net-tools ftp tftp bash-completion runc
 
-      
+        pwd
+        ls
         sudo docker load -i my_project/dockerio_library_registry2.tar.gz
         
         sudo docker tag <imageidtag> docker.io/library/registry:2
