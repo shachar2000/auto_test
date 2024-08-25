@@ -80,7 +80,7 @@ jobs:
 
         pwd
         ls
-        find / -name "dockerio_library_registry2.tar.gz"
+        sudo find / -name "dockerio_library_registry2.tar.gz"
         
         sudo docker load -i my_project/dockerio_library_registry2.tar.gz
         
