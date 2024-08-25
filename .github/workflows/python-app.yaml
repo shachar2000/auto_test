@@ -77,10 +77,6 @@ jobs:
         sudo htpasswd -bBc /var/registry/auth/htpasswd root ort
         
         sudo apt-get install -y jq openssl docker.io apache2-utils curl wget telnet nmap dnsutils iperf3 net-tools ftp tftp bash-completion runc
-
-        pwd
-        ls
-        sudo find / -name "dockerio_library_registry2.tar.gz"
         
         sudo docker load -i /home/runner/work/auto_test/auto_test/dockerio_library_registry2.tar.gz
         
