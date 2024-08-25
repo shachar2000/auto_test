@@ -63,7 +63,7 @@ jobs:
         DNS.2 = registry.example.com                        
         EOF
         
-        touch domain.key
+        sudo touch domain.key
         sudo chmod 777 domain.key
         sudo apt-get update
         sudo apt-get install openssl
