@@ -62,18 +62,22 @@ jobs:
         DNS.1 = registry
         DNS.2 = registry.example.com                        
         EOF
-        
-        touch domain.key
+
+        sudo touch domain.crt
+        sudo touch domain.key
         sudo chmod 777 domain.key
+        sudo chmod 777 domain.crt
         sudo apt-get update
         sudo apt-get install openssl
         
         openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 3650 -out domain.crt -config <(cat csr_answer.txt)
         
+        sudo apt-get install apache2-utils
+
         sudo htpasswd -bBc /var/registry/auth/htpasswd root ort
         
-        sudo install -y jq openssl docker httpd-tools curl wget telnet nmap bind-utils iperf3 net-tools ftp tftp bash-completion runc
-        
+        sudo apt-get install -y jq openssl docker.io apache2-utils curl wget telnet nmap dnsutils iperf3 net-tools ftp tftp bash-completion runc
+
         sudo docker load -i dockerio_library_registry2.tar.gz
         
         sudo docker tag <imageidtag> docker.io/library/registry:2
