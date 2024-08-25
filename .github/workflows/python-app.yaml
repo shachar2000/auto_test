@@ -27,6 +27,7 @@ jobs:
         pip install -r requirements.txt
     - name: Install cluster
       run: |
+        sudo -i
         sudo mkdir -p /var/registry
         cd /var/registry
         sudo mkdir /var/registry/{certs,data,auth}
