@@ -82,7 +82,7 @@ jobs:
 
         docker images
         
-        sudo docker tag 5107333e08a8 docker.io/library/registry:2
+        sudo docker tag 0b1ee39de203 docker.io/library/registry:2
         
         sudo docker run --name registry -p 5000:5000 -v /var/registry/data:/var/lib/registry:z -v /var/registry/auth:/auth:z -v /var/registry/certs:/certs:z -e "REGISTRY_AUTH=htpasswd" -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key -d docker.io/library/registry:2
         
