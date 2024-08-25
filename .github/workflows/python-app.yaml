@@ -30,7 +30,7 @@ jobs:
         sudo mkdir -p /var/registry
         cd /var/registry
         sudo mkdir /var/registry/{certs,data,auth}
-        
+        sudo touch csr_answer.txt
         sudo chmod 777 csr_answer.txt
         
         cat > csr_answer.txt << EOF
