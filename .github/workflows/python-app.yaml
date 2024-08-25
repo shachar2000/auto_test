@@ -1,37 +1,33 @@
-name: Python application
+name: Install cluster
 
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
-  build:
+  install:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-
-    - name: Install dependencies
+    - name: Install required packages
       run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        sudo apt-get update
+        sudo apt-get install -y openssl docker httpd-tools apache2-utils curl wget telnet nmap bind-utils iperf3 net-tools ftp tftp bash-completion
 
-    - name: Install cluster
+    - name: Create directories
       run: |
-        sudo mkdir -p /var/registry
-        sudo cd /var/registry
-        sudo mkdir /var/registry/{certs,data,auth}
-        sudo cat > csr_answer.txt << EOF
+        sudo mkdir -p /var/registry/{certs,data,auth}
+
+    - name: Create CSR configuration file
+      run: |
+        sudo bash -c 'cat > /var/registry/csr_answer.txt << EOF
         [req]
         default_bits = 4096
         prompt = no
@@ -58,22 +54,39 @@ jobs:
         
         [ alt_names ]
         DNS.1 = registry
-        DNS.2 = registry.example.com                        
-        EOF
-        
-        sudo openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 3650 -out domain.crt -config <(cat csr_answer.txt)
-        
-        sudo htpasswd -bBc /var/registry/auth/htpasswd root ort
-        
-        sudo install -y jq openssl docker httpd-tools curl wget telnet nmap bind-utils iperf3 net-tools ftp tftp bash-completion runc
-        
-        sudo docker load -i dockerio_library_registry2.tar.gz
-        
-        sudo docker tag <imageidtag> docker.io/library/registry:2
-        
-        sudo docker run --name registry -p 5000:5000 -v /var/registry/data:/var/lib/registry:z -v /var/registry/auth:/auth:z -v /var/registry/certs:/certs:z -e "REGISTRY_AUTH=htpasswd" -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key -d docker.io/library/registry:2
-        
-        sudo curl -u root:octopus -k https://registry:5000/v2/_catalog
-    - name: Run tests
+        DNS.2 = registry.example.com
+        EOF'
+
+    - name: Generate SSL certificates
       run: |
-        pytest
+        sudo openssl req -newkey rsa:4096 -nodes -sha256 -keyout /var/registry/certs/domain.key -x509 -days 3650 -out /var/registry/certs/domain.crt -config /var/registry/csr_answer.txt
+
+    - name: Create htpasswd file
+      run: |
+        sudo htpasswd -bBc /var/registry/auth/htpasswd root ort
+
+    - name: Load Docker image
+      run: |
+        sudo docker load -i dockerio_library_registry2.tar.gz
+
+    - name: Tag Docker image
+      run: |
+        sudo docker tag <imageidtag> docker.io/library/registry:2
+
+    - name: Run Docker Registry container
+      run: |
+        sudo docker run --name registry -p 5000:5000 \
+          -v /var/registry/data:/var/lib/registry:z \
+          -v /var/registry/auth:/auth:z \
+          -v /var/registry/certs:/certs:z \
+          -e "REGISTRY_AUTH=htpasswd" \
+          -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" \
+          -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
+          -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+          -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+          -d docker.io/library/registry:2
+
+    - name: Verify Registry setup
+      run: |
+        curl -u root:ort -k https://localhost:5000/v2/_catalog
+
