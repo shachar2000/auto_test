@@ -28,6 +28,7 @@ jobs:
 
     - name: Install cluster
       run: |
+        sudo -s
         mkdir -p /var/registry
         cd /var/registry
         mkdir /var/registry/{certs,data,auth}
