@@ -62,8 +62,12 @@ jobs:
         DNS.1 = registry
         DNS.2 = registry.example.com                        
         EOF
-                
-        sudo openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 3650 -out domain.crt -config <(cat csr_answer.txt)
+        
+        sudo chmod 777 domain.key
+        sudo apt-get update
+        sudo apt-get install openssl
+        
+        openssl req -newkey rsa:4096 -nodes -sha256 -keyout domain.key -x509 -days 3650 -out domain.crt -config <(cat csr_answer.txt)
         
         sudo htpasswd -bBc /var/registry/auth/htpasswd root ort
         
